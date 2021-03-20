@@ -1,6 +1,7 @@
 package ru.netology;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
@@ -10,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 public class ServerApp {
     public static void main(String[] args) throws IOException {
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(new InetSocketAddress("localhost", 23334));
+        serverChannel.bind(new InetSocketAddress(Constants.HOSTNAME, Constants.PORT));
 
         while (true) {
             try (SocketChannel socketChannel = serverChannel.accept()) {
@@ -24,11 +25,15 @@ public class ServerApp {
                     final String msg = new String(inputBuffer.array(), 0, byteCount,
                             StandardCharsets.UTF_8);
                     inputBuffer.clear();
-                    System.out.println("Получено сообщение от клиента: " + msg);
-                    socketChannel.write(ByteBuffer.wrap(("Эхо: " + msg).getBytes(StandardCharsets.UTF_8)));
+
+                    int number = Integer.parseInt(msg);
+                    System.out.println("Integer received from client: " + number);
+                    BigInteger fibonacciNumber = Fibonacci.get(number);
+                    System.out.println("Fibonacci Number value: " + fibonacciNumber);
+                    socketChannel.write(ByteBuffer.wrap(("Fibonacci Number value: " + fibonacciNumber).getBytes(StandardCharsets.UTF_8)));
                 }
-            } catch (IOException e) {
-                System.out.println(e.getMessage());
+            } catch (NumberFormatException | IOException e) {
+                e.printStackTrace();
             }
         }
     }

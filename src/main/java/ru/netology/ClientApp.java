@@ -10,23 +10,28 @@ import java.util.concurrent.TimeUnit;
 
 public class ClientApp {
     public static void main(String[] args) throws IOException {
-        InetSocketAddress socketAddress = new InetSocketAddress("127.0.0.1", 23334);
+        InetSocketAddress socketAddress = new InetSocketAddress(Constants.HOSTNAME, Constants.PORT);
         final SocketChannel socketChannel = SocketChannel.open();
 
         try (socketChannel; Scanner scanner = new Scanner(System.in)) {
             socketChannel.connect(socketAddress);
             final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
 
-            String msg;
             while (true) {
-                System.out.println("Enter message for server...");
-                msg = scanner.nextLine();
+                System.out.println("Enter integer number:");
+                String  msg = scanner.nextLine();
+                try {
+                    int number = Integer.parseInt(msg);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    continue;
+                }
                 if ("end".equals(msg)) {
                     break;
                 }
 
                 socketChannel.write(ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8)));
-                TimeUnit.SECONDS.sleep(2);
+                TimeUnit.SECONDS.sleep(Constants.TIMEOUT);
 
                 int bytesCount = socketChannel.read(inputBuffer);
                 System.out.println(new String(inputBuffer.array(), 0, bytesCount,

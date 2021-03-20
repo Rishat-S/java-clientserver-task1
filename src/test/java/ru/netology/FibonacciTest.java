@@ -30,6 +30,5 @@ class FibonacciTest {
     @DisplayName("Fibonacci 50th elements")
     public void test50thElements() {
         assertEquals(new BigInteger("12586269025"), Fibonacci.get(50));
-
     }
 }

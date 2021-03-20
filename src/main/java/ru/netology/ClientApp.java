@@ -1,44 +1,35 @@
 package ru.netology;
 
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
+import java.io.*;
+import java.net.Socket;
 import java.util.Scanner;
-import java.util.concurrent.TimeUnit;
 
 public class ClientApp {
     public static void main(String[] args) throws IOException {
-        InetSocketAddress socketAddress = new InetSocketAddress(Constants.HOSTNAME, Constants.PORT);
-        final SocketChannel socketChannel = SocketChannel.open();
+        Socket socket = new Socket(Constants.HOSTNAME, Constants.PORT);
+        try (BufferedReader in = new BufferedReader((
+                new InputStreamReader(socket.getInputStream())));
+             PrintWriter out = new PrintWriter(
+                     new OutputStreamWriter(socket.getOutputStream()), true);
+             Scanner scanner = new Scanner(System.in)) {
 
-        try (socketChannel; Scanner scanner = new Scanner(System.in)) {
-            socketChannel.connect(socketAddress);
-            final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-
+            String msg;
             while (true) {
                 System.out.println("Enter integer number:");
-                String  msg = scanner.nextLine();
+                msg = scanner.nextLine();
+                if ("end".equals(msg)) {
+                    break;
+                }
                 try {
                     int number = Integer.parseInt(msg);
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                     continue;
                 }
-                if ("end".equals(msg)) {
-                    break;
-                }
-
-                socketChannel.write(ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8)));
-                TimeUnit.SECONDS.sleep(Constants.TIMEOUT);
-
-                int bytesCount = socketChannel.read(inputBuffer);
-                System.out.println(new String(inputBuffer.array(), 0, bytesCount,
-                        StandardCharsets.UTF_8).trim());
-                inputBuffer.clear();
+                out.println(msg);
+                System.out.println("Fibonacci Number value: " + in.readLine());
             }
-        } catch (InterruptedException | IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }

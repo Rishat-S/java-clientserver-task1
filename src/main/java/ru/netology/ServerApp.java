@@ -1,36 +1,31 @@
 package ru.netology;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.math.BigInteger;
-import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
-import java.nio.charset.StandardCharsets;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class ServerApp {
     public static void main(String[] args) throws IOException {
-        final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(new InetSocketAddress(Constants.HOSTNAME, Constants.PORT));
+        ServerSocket serverSocket = new ServerSocket(Constants.PORT);
 
         while (true) {
-            try (SocketChannel socketChannel = serverChannel.accept()) {
-                final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-
-                while (socketChannel.isConnected()) {
-                    int byteCount = socketChannel.read(inputBuffer);
-                    if (byteCount == -1) {
+            try (Socket socket = serverSocket.accept();
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(
+                         new InputStreamReader(socket.getInputStream()))) {
+                String msg;
+                while ((msg = in.readLine()) != null) {
+                    if (msg.equals("end")) {
                         break;
                     }
-                    final String msg = new String(inputBuffer.array(), 0, byteCount,
-                            StandardCharsets.UTF_8);
-                    inputBuffer.clear();
-
                     int number = Integer.parseInt(msg);
                     System.out.println("Integer received from client: " + number);
                     BigInteger fibonacciNumber = Fibonacci.get(number);
-                    System.out.println("Fibonacci Number value: " + fibonacciNumber);
-                    socketChannel.write(ByteBuffer.wrap(("Fibonacci Number value: " + fibonacciNumber).getBytes(StandardCharsets.UTF_8)));
+                    out.println(fibonacciNumber);
                 }
             } catch (NumberFormatException | IOException e) {
                 e.printStackTrace();
